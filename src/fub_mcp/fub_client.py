@@ -91,7 +91,20 @@ class FUBClient:
             endpoint,
             **request_kwargs
         )
-        response.raise_for_status()
+        
+        # Get error details before raising
+        if response.status_code >= 400:
+            try:
+                error_data = response.json()
+                error_msg = f"{response.status_code} Bad Request: {error_data}"
+            except:
+                error_msg = f"{response.status_code} Bad Request"
+            raise httpx.HTTPStatusError(
+                message=error_msg,
+                request=response.request,
+                response=response
+            )
+        
         return response.json()
     
     async def get(

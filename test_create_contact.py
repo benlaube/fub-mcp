@@ -23,8 +23,7 @@ async def create_dummy_contact():
     
     create_args = {
         "firstName": "Test",
-        "lastName": f"Dummy Contact {timestamp}",
-        "name": f"Test Dummy Contact {timestamp}",
+        "lastName": f"Dummy_{timestamp}",
         "emails": [
             {
                 "value": f"test.dummy.{timestamp}@example.com",
@@ -34,13 +33,12 @@ async def create_dummy_contact():
         ],
         "phones": [
             {
-                "value": f"555-{timestamp[-4:]}",
+                "value": f"555{timestamp[-4:]}",  # Remove dashes, just numbers
                 "type": "mobile",
                 "isPrimary": 1
             }
         ],
-        "source": "MCP Test",
-        "tags": ["test", "dummy", "mcp-created"]
+        "source": "MCP Test"
     }
     
     print(f"Creating contact: {create_args['name']}")

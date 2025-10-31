@@ -10,6 +10,7 @@ from datetime import datetime
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
+import httpx
 
 from .config import Config
 from .fub_client import FUBClient
@@ -274,6 +275,17 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
                 "tool": name,
                 "arguments": arguments
             }
+            
+            # Try to extract more detailed error info
+            import httpx
+            if isinstance(e, httpx.HTTPStatusError):
+                try:
+                    error_data = e.response.json()
+                    error_response["api_error"] = error_data
+                    error_response["status_code"] = e.response.status_code
+                except:
+                    error_response["status_code"] = e.response.status_code
+            
             print(f"Tool execution error ({name}): {e}", file=sys.stderr)
             return [TextContent(
                 type="text",
