@@ -59,14 +59,51 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
         try:
             # PEOPLE ENDPOINTS
             if name == "get_people":
-                params = {
-                    "limit": arguments.get("limit", 20),
-                    "offset": arguments.get("offset", 0),
-                    "sort": arguments.get("sort", "-created"),
-                }
-                if arguments.get("search"):
-                    params["search"] = arguments["search"]
-                result = await fub.get("/people", params=params)
+                limit = arguments.get("limit", 20)
+                offset = arguments.get("offset", 0)
+                sort = arguments.get("sort", "-created")
+                search = arguments.get("search")
+                
+                # If requesting more than max page size, use fetch_all_pages for automatic pagination
+                if limit > Config.MAX_PAGE_SIZE:
+                    params = {"sort": sort}
+                    if search:
+                        params["search"] = search
+                    
+                    # Fetch all pages up to the requested limit
+                    all_people = await fub.fetch_all_pages(
+                        "/people",
+                        params=params,
+                        limit=Config.MAX_PAGE_SIZE
+                    )
+                    
+                    # Apply offset and limit to the results
+                    if offset > 0:
+                        all_people = all_people[offset:]
+                    if limit and len(all_people) > limit:
+                        all_people = all_people[:limit]
+                    
+                    # Format response to match API structure
+                    result = {
+                        "people": all_people,
+                        "_metadata": {
+                            "limit": limit,
+                            "offset": offset,
+                            "total": len(all_people),
+                            "returned": len(all_people)
+                        }
+                    }
+                else:
+                    # Single page request - use regular endpoint
+                    params = {
+                        "limit": limit,
+                        "offset": offset,
+                        "sort": sort,
+                    }
+                    if search:
+                        params["search"] = search
+                    result = await fub.get("/people", params=params)
+                
                 return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
             
             elif name == "get_person":
@@ -78,8 +115,101 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
                 result = await fub.get("/people", params=params)
                 return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
             
+            elif name == "check_duplicates":
+                from .duplicate_checker import DuplicateChecker
+                
+                email = arguments.get("email")
+                phone = arguments.get("phone")
+                first_name = arguments.get("firstName")
+                last_name = arguments.get("lastName")
+                search_limit = arguments.get("searchLimit", 500)
+                
+                if not email and not phone:
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps({
+                            "error": True,
+                            "message": "At least one of 'email' or 'phone' must be provided"
+                        }, indent=2)
+                    )]
+                
+                if phone and (not first_name or not last_name):
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps({
+                            "error": True,
+                            "message": "Both 'firstName' and 'lastName' are required when checking by phone"
+                        }, indent=2)
+                    )]
+                
+                # Search for contacts efficiently
+                # If email provided, search by email first
+                contacts_to_check = []
+                
+                if email:
+                    # Search by email
+                    search_result = await fub.get("/people", params={
+                        "search": email,
+                        "limit": search_limit
+                    })
+                    if "people" in search_result:
+                        contacts_to_check.extend(search_result["people"])
+                
+                if phone:
+                    # Search by phone
+                    search_result = await fub.get("/people", params={
+                        "search": phone,
+                        "limit": search_limit
+                    })
+                    if "people" in search_result:
+                        # Add contacts that aren't already in the list
+                        existing_ids = {c.get("id") for c in contacts_to_check}
+                        for contact in search_result["people"]:
+                            if contact.get("id") not in existing_ids:
+                                contacts_to_check.append(contact)
+                
+                # If we didn't find contacts via search, get a broader sample
+                # This handles cases where exact match search might miss variations
+                if len(contacts_to_check) < 50:
+                    # Get recent contacts to check against
+                    recent_result = await fub.get("/people", params={
+                        "limit": min(search_limit, 500),
+                        "sort": "-created"
+                    })
+                    if "people" in recent_result:
+                        existing_ids = {c.get("id") for c in contacts_to_check}
+                        for contact in recent_result["people"]:
+                            if contact.get("id") not in existing_ids:
+                                contacts_to_check.append(contact)
+                
+                # Check for duplicates
+                duplicates = DuplicateChecker.find_duplicates(
+                    contacts_to_check,
+                    email=email,
+                    phone=phone,
+                    first_name=first_name,
+                    last_name=last_name
+                )
+                
+                # Format result
+                result = DuplicateChecker.format_duplicate_result(duplicates)
+                result["searchedContacts"] = len(contacts_to_check)
+                result["searchCriteria"] = {
+                    "email": email,
+                    "phone": phone,
+                    "firstName": first_name,
+                    "lastName": last_name
+                }
+                
+                return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
+            
             # PEOPLE CRUD OPERATIONS
             elif name == "create_person":
+                # Invalidate people cache when creating
+                from .cache import get_cache_manager
+                cache_manager = get_cache_manager(enabled=Config.ENABLE_CACHING)
+                if cache_manager.enabled:
+                    cache_manager.invalidate("/people")
                 # Build person data from arguments
                 person_data = {}
                 if arguments.get("name"):
@@ -107,6 +237,11 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
                 return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
             
             elif name == "update_person":
+                # Invalidate people cache when updating
+                from .cache import get_cache_manager
+                cache_manager = get_cache_manager(enabled=Config.ENABLE_CACHING)
+                if cache_manager.enabled:
+                    cache_manager.invalidate("/people")
                 person_id = arguments["personId"]
                 # Build person data from arguments (exclude personId)
                 person_data = {}
@@ -135,6 +270,11 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
                 return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
             
             elif name == "delete_person":
+                # Invalidate people cache when deleting
+                from .cache import get_cache_manager
+                cache_manager = get_cache_manager(enabled=Config.ENABLE_CACHING)
+                if cache_manager.enabled:
+                    cache_manager.invalidate("/people")
                 person_id = arguments["personId"]
                 result = await fub.delete_person(person_id)
                 return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
@@ -263,6 +403,61 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
             
             elif name == "get_custom_field":
                 result = await fub.get_custom_field(arguments["customFieldId"])
+                return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
+            
+            elif name == "create_custom_field":
+                # Invalidate custom fields cache
+                from .cache import get_cache_manager
+                cache_manager = get_cache_manager(enabled=Config.ENABLE_CACHING)
+                if cache_manager.enabled:
+                    cache_manager.invalidate("/customFields")
+                custom_field_data = {
+                    "label": arguments["label"],
+                    "type": arguments["type"]
+                }
+                # Note: 'name' is auto-generated by FUB API, don't include it
+                # Optional fields
+                if "orderWeight" in arguments:
+                    custom_field_data["orderWeight"] = arguments["orderWeight"]
+                if "hideIfEmpty" in arguments:
+                    custom_field_data["hideIfEmpty"] = arguments["hideIfEmpty"]
+                if "readOnly" in arguments:
+                    custom_field_data["readOnly"] = arguments["readOnly"]
+                if "options" in arguments:
+                    custom_field_data["options"] = arguments["options"]
+                result = await fub.create_custom_field(custom_field_data)
+                return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
+            
+            elif name == "update_custom_field":
+                # Invalidate custom fields cache
+                from .cache import get_cache_manager
+                cache_manager = get_cache_manager(enabled=Config.ENABLE_CACHING)
+                if cache_manager.enabled:
+                    cache_manager.invalidate("/customFields")
+                custom_field_data = {}
+                # Only include fields that are provided
+                if "label" in arguments:
+                    custom_field_data["label"] = arguments["label"]
+                if "type" in arguments:
+                    custom_field_data["type"] = arguments["type"]
+                if "orderWeight" in arguments:
+                    custom_field_data["orderWeight"] = arguments["orderWeight"]
+                if "hideIfEmpty" in arguments:
+                    custom_field_data["hideIfEmpty"] = arguments["hideIfEmpty"]
+                if "readOnly" in arguments:
+                    custom_field_data["readOnly"] = arguments["readOnly"]
+                if "options" in arguments:
+                    custom_field_data["options"] = arguments["options"]
+                result = await fub.update_custom_field(arguments["customFieldId"], custom_field_data)
+                return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
+            
+            elif name == "delete_custom_field":
+                # Invalidate custom fields cache
+                from .cache import get_cache_manager
+                cache_manager = get_cache_manager(enabled=Config.ENABLE_CACHING)
+                if cache_manager.enabled:
+                    cache_manager.invalidate("/customFields")
+                result = await fub.delete_custom_field(arguments["customFieldId"])
                 return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
             
             else:

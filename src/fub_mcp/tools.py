@@ -143,6 +143,43 @@ def get_all_tools() -> List[Tool]:
             }
         ),
         Tool(
+            name="check_duplicates",
+            description=(
+                "Check for duplicate contacts in Follow Up Boss. "
+                "Uses FUB's deduplication rules: "
+                "1) Email address match, or "
+                "2) Phone number AND both first and last name match. "
+                "Returns potential duplicates with match reasons and confidence levels."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "description": "Email address to check for duplicates"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "Phone number to check for duplicates"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "description": "First name (required if checking phone duplicates)"
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "description": "Last name (required if checking phone duplicates)"
+                    },
+                    "searchLimit": {
+                        "type": "number",
+                        "description": "Maximum number of contacts to search (default: 500). Higher values give more thorough checks but are slower.",
+                        "default": 500
+                    }
+                },
+                "required": []
+            }
+        ),
+        Tool(
             name="create_person",
             description="Create a new person/contact in Follow Up Boss",
             inputSchema={
@@ -659,6 +696,95 @@ def get_all_tools() -> List[Tool]:
                     "customFieldId": {
                         "type": "string",
                         "description": "Custom field ID"
+                    }
+                },
+                "required": ["customFieldId"]
+            }
+        ),
+        Tool(
+            name="create_custom_field",
+            description="Create a new custom field in Follow Up Boss. The internal 'name' is auto-generated from the label.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "description": "Display label for the field (e.g., 'UUID'). This will be used to generate the internal field name."
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Field type: 'text', 'number', 'date', 'select', 'checkbox', 'textarea'",
+                        "enum": ["text", "number", "date", "select", "checkbox", "textarea"]
+                    },
+                    "orderWeight": {
+                        "type": "integer",
+                        "description": "Order/position weight (optional)"
+                    },
+                    "hideIfEmpty": {
+                        "type": "boolean",
+                        "description": "Hide field if empty (optional, default: false)"
+                    },
+                    "readOnly": {
+                        "type": "boolean",
+                        "description": "Make field read-only (optional, default: false)"
+                    },
+                    "options": {
+                        "type": "array",
+                        "description": "Options for 'select' type fields (optional)",
+                        "items": {"type": "string"}
+                    }
+                },
+                "required": ["label", "type"]
+            }
+        ),
+        Tool(
+            name="update_custom_field",
+            description="Update an existing custom field",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "customFieldId": {
+                        "type": "string",
+                        "description": "Custom field ID to update"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Updated display label"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Field type"
+                    },
+                    "orderWeight": {
+                        "type": "integer",
+                        "description": "Order/position weight"
+                    },
+                    "hideIfEmpty": {
+                        "type": "boolean",
+                        "description": "Hide field if empty"
+                    },
+                    "readOnly": {
+                        "type": "boolean",
+                        "description": "Make field read-only"
+                    },
+                    "options": {
+                        "type": "array",
+                        "description": "Options for 'select' type fields",
+                        "items": {"type": "string"}
+                    }
+                },
+                "required": ["customFieldId"]
+            }
+        ),
+        Tool(
+            name="delete_custom_field",
+            description="Delete a custom field from Follow Up Boss (permanent action)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "customFieldId": {
+                        "type": "string",
+                        "description": "Custom field ID to delete"
                     }
                 },
                 "required": ["customFieldId"]

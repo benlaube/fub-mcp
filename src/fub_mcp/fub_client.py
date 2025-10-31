@@ -4,6 +4,7 @@ import asyncio
 from typing import Any, Dict, List, Optional
 import httpx
 from .config import Config
+from .cache import get_cache_manager
 
 
 class FUBClient:
@@ -64,7 +65,7 @@ class FUBClient:
         **kwargs
     ) -> Dict[str, Any]:
         """
-        Make an API request.
+        Make an API request with rate limiting and header checking.
         
         Args:
             method: HTTP method
@@ -78,7 +79,7 @@ class FUBClient:
         """
         client = await self._get_client()
         
-        # Rate limiting
+        # Rate limiting - base delay between requests
         await asyncio.sleep(Config.RATE_LIMIT_DELAY_MS / 1000.0)
         
         # Prepare request kwargs
@@ -86,11 +87,57 @@ class FUBClient:
         if json_data:
             request_kwargs["json"] = json_data
         
+        # Check cache for GET requests
+        cache_manager = get_cache_manager(
+            max_size=Config.CACHE_MAX_SIZE,
+            enabled=Config.ENABLE_CACHING
+        )
+        
+        if method == "GET" and cache_manager.enabled:
+            cached_data = cache_manager.get(endpoint, params)
+            if cached_data is not None:
+                # Return cached data without making API call
+                return cached_data
+        
         response = await client.request(
             method,
             endpoint,
             **request_kwargs
         )
+        
+        # Check rate limit headers and respect them
+        rate_limit_remaining = response.headers.get("X-RateLimit-Remaining")
+        rate_limit_reset = response.headers.get("X-RateLimit-Reset")
+        
+        if rate_limit_remaining:
+            try:
+                remaining = int(rate_limit_remaining)
+                # If we're getting close to the limit (less than 10 remaining), wait longer
+                if remaining < 10:
+                    # Wait a bit longer to avoid hitting the limit
+                    await asyncio.sleep(0.2)
+                elif remaining < 50:
+                    # Moderate slowdown
+                    await asyncio.sleep(0.1)
+            except (ValueError, TypeError):
+                pass
+        
+        # Handle 429 Too Many Requests
+        if response.status_code == 429:
+            # Wait a bit and potentially retry (for now, just raise)
+            wait_time = 2.0
+            if rate_limit_reset:
+                try:
+                    # If we have reset time, we could calculate wait, but for now just wait
+                    pass
+                except (ValueError, TypeError):
+                    pass
+            await asyncio.sleep(wait_time)
+            raise httpx.HTTPStatusError(
+                message=f"429 Rate Limit Exceeded. Please wait before retrying.",
+                request=response.request,
+                response=response
+            )
         
         # Get error details before raising
         if response.status_code >= 400:
@@ -105,7 +152,14 @@ class FUBClient:
                 response=response
             )
         
-        return response.json()
+        # Parse response
+        response_data = response.json()
+        
+        # Cache successful GET responses
+        if method == "GET" and response.status_code == 200 and cache_manager.enabled:
+            cache_manager.set(endpoint, response_data, params=params)
+        
+        return response_data
     
     async def get(
         self,
@@ -364,4 +418,41 @@ class FUBClient:
     async def get_custom_field(self, custom_field_id: str) -> Dict[str, Any]:
         """Get a specific custom field by ID."""
         return await self.get(f"/customFields/{custom_field_id}")
+
+    async def create_custom_field(self, custom_field_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create a new custom field.
+
+        Args:
+            custom_field_data: Custom field data (name, label, type, etc.)
+
+        Returns:
+            Created custom field data
+        """
+        return await self.post("/customFields", json_data=custom_field_data)
+
+    async def update_custom_field(self, custom_field_id: str, custom_field_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Update an existing custom field.
+
+        Args:
+            custom_field_id: Custom field ID
+            custom_field_data: Updated custom field data
+
+        Returns:
+            Updated custom field data
+        """
+        return await self.put(f"/customFields/{custom_field_id}", json_data=custom_field_data)
+
+    async def delete_custom_field(self, custom_field_id: str) -> Dict[str, Any]:
+        """
+        Delete a custom field.
+
+        Args:
+            custom_field_id: Custom field ID
+
+        Returns:
+            Deletion confirmation
+        """
+        return await self.delete(f"/customFields/{custom_field_id}")
 

@@ -26,6 +26,10 @@ class Config:
     ENABLE_CUSTOM_PROCESSING: bool = True
     RESTRICTED_PROCESSING: bool = True  # Use RestrictedPython for safety
     
+    # Caching
+    ENABLE_CACHING: bool = True  # Enable response caching
+    CACHE_MAX_SIZE: int = 1000  # Maximum number of cache entries
+    
     @classmethod
     def validate(cls) -> bool:
         """Validate that required configuration is present."""
