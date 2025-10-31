@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "fub-mcp": {
+      "command": "/Users/benlaube/fub-mcp/venv/bin/python",
+      "args": ["-m", "fub_mcp.server"],
+      "cwd": "/Users/benlaube/fub-mcp",
+      "env": {
+        "FUB_API_KEY": "fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H"
+      }
+    }
+  }
+}
+
