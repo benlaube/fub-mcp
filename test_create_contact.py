@@ -41,7 +41,8 @@ async def create_dummy_contact():
         "source": "MCP Test"
     }
     
-    print(f"Creating contact: {create_args['name']}")
+    contact_name = f"{create_args['firstName']} {create_args['lastName']}"
+    print(f"Creating contact: {contact_name}")
     print(f"Email: {create_args['emails'][0]['value']}")
     print(f"Phone: {create_args['phones'][0]['value']}")
     print()
