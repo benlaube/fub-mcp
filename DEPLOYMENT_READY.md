@@ -105,8 +105,8 @@ pip install -r requirements.txt
 # Copy environment template
 cp env.example .env
 
-# Edit .env with your API key (or use default)
-# FUB_API_KEY=fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H
+# Edit .env with your API key
+# FUB_API_KEY=your_api_key_here
 ```
 
 ### Running the Server

@@ -10,7 +10,7 @@
    - Configured for Claude Desktop, Cline, Continue.dev, and more
 
 2. **API Integration** ✅
-   - Default API key configured: `fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H`
+   - Default API key configured: `your_api_key_here`
    - Async FUB API client with pagination
    - Rate limiting and error handling
    - **Verified**: Real API connection tested successfully
@@ -117,7 +117,7 @@ fub-mcp/
 
 ## API Key
 
-**Default Key**: `fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H`
+**Default Key**: `your_api_key_here`
 
 - ✅ Configured in code
 - ✅ Can be overridden via environment variable

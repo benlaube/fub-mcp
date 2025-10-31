@@ -36,7 +36,7 @@ The server uses **stdio transport**, which is the standard MCP communication met
       "command": "python",
       "args": ["-m", "fub_mcp.server"],
       "env": {
-        "FUB_API_KEY": "fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H"
+        "FUB_API_KEY": "your_api_key_here"
       }
     }
   }
@@ -65,7 +65,7 @@ The server uses **stdio transport**, which is the standard MCP communication met
       "command": "python",
       "args": ["-m", "fub_mcp.server"],
       "env": {
-        "FUB_API_KEY": "fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H"
+        "FUB_API_KEY": "your_api_key_here"
       }
     }
   }
@@ -83,7 +83,7 @@ The server uses **stdio transport**, which is the standard MCP communication met
       "command": "python",
       "args": ["-m", "fub_mcp.server"],
       "env": {
-        "FUB_API_KEY": "fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H"
+        "FUB_API_KEY": "your_api_key_here"
       }
     }
   }
@@ -97,10 +97,10 @@ For any other MCP client, configure it to:
 1. **Command**: `python` (or `python3`)
 2. **Arguments**: `["-m", "fub_mcp.server"]`
 3. **Environment Variables**: 
-   - `FUB_API_KEY=fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H`
+   - `FUB_API_KEY=your_api_key_here`
 
 **Or use environment file:**
-- Create `.env` file with `FUB_API_KEY=fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H`
+- Create `.env` file with `FUB_API_KEY=your_api_key_here`
 
 ### 5. Programmatic Usage (Python)
 

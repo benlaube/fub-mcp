@@ -10,8 +10,8 @@ load_dotenv()
 class Config:
     """Configuration settings for the FUB MCP Server."""
     
-    # Default API key (can be overridden via environment variable)
-    FUB_API_KEY: str = os.getenv("FUB_API_KEY", "fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H")
+    # API key must be provided via environment variable
+    FUB_API_KEY: str = os.getenv("FUB_API_KEY", "")
     FUB_API_BASE: str = "https://api.followupboss.com/v1"
     FUB_API_SOURCE: str = "FUB_MCP_Server_Python"
     

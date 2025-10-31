@@ -36,9 +36,9 @@ If Cursor uses a config file, create or update:
     "fub-mcp": {
       "command": "/Users/benlaube/fub-mcp/venv/bin/python",
       "args": ["-m", "fub_mcp.server"],
-      "cwd": "/Users/benlaube/fub-mcp",
+      "cwd": "/path/to/fub-mcp",
       "env": {
-        "FUB_API_KEY": "fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H"
+        "FUB_API_KEY": "your_api_key_here"
       }
     }
   }
@@ -78,7 +78,7 @@ If Cursor uses a config file, create or update:
 ```json
 {
   "env": {
-    "FUB_API_KEY": "fka_0E1RFmwuRHSgSd771KQY7ps2q4HgUUNV8H"
+    "FUB_API_KEY": "your_api_key_here"
   }
 }
 ```

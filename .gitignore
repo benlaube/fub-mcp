@@ -30,6 +30,9 @@ env/
 .env
 .env.local
 
+# Local MCP config (may contain API keys)
+cursor_mcp_config.json
+
 # IDE
 .vscode/
 .idea/
