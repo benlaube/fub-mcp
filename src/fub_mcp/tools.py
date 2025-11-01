@@ -10,6 +10,59 @@ def get_all_tools() -> List[Tool]:
     and individual endpoint tools.
     """
     return [
+        # DISCOVERY & SEARCH TOOLS
+        Tool(
+            name="find_data_location",
+            description=(
+                "🔍 DISCOVERY TOOL - Use FIRST for natural language queries! "
+                "Search for data by keywords to find where information lives. "
+                "Searches across: endpoints (people, deals, tasks), stages, custom fields, "
+                "sources, users, and more. Returns ranked results with query hints. "
+                "Example: keywords=['realtor', 'stage'] finds stage filtering options."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "keywords": {
+                        "type": "array",
+                        "description": "Keywords to search for (e.g., ['stage', 'realtor'], ['custom', 'field'], ['deal', 'value'])",
+                        "items": {"type": "string"}
+                    },
+                    "entity_type": {
+                        "type": "string",
+                        "description": "What to search for: 'endpoint', 'field', 'stage', 'source', 'any' (default)",
+                        "enum": ["endpoint", "field", "stage", "source", "user", "any"],
+                        "default": "any"
+                    },
+                    "limit": {
+                        "type": "number",
+                        "description": "Maximum results to return (default: 10)",
+                        "default": 10
+                    }
+                },
+                "required": ["keywords"]
+            }
+        ),
+        Tool(
+            name="get_schema_hints",
+            description=(
+                "Get detailed schema information with query hints for an endpoint. "
+                "Returns available fields, filter options, common queries, and examples. "
+                "Use after find_data_location to understand how to query the data."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "endpoint": {
+                        "type": "string",
+                        "description": "Endpoint name: 'people', 'deals', 'tasks', 'events', etc.",
+                        "enum": ["people", "deals", "tasks", "events", "calls", "notes", "appointments"]
+                    }
+                },
+                "required": ["endpoint"]
+            }
+        ),
+        
         # Main powerful tool
         Tool(
             name="execute_custom_query",
@@ -83,7 +136,12 @@ def get_all_tools() -> List[Tool]:
         # PEOPLE ENDPOINTS
         Tool(
             name="get_people",
-            description="Get a list of people/contacts from Follow Up Boss",
+            description=(
+                "Get a list of people/contacts from Follow Up Boss. Supports filtering by stage, source, "
+                "user assignment, and SMART DATE FILTERING. "
+                "Examples: created='last 7 days', created='this month', created='older than 30 days'. "
+                "Set includeCustomFields=true to get custom field values (recommended!)."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -103,8 +161,50 @@ def get_all_tools() -> List[Tool]:
                     },
                     "sort": {
                         "type": "string",
-                        "description": "Sort field (e.g., '-created' for newest first)",
+                        "description": "Sort field (e.g., '-created' for newest first, 'name' for alphabetical)",
                         "default": "-created"
+                    },
+                    "stageId": {
+                        "type": "number",
+                        "description": "Filter by stage ID (use get_stages to find stage IDs)"
+                    },
+                    "assignedUserId": {
+                        "type": "number",
+                        "description": "Filter by assigned user ID"
+                    },
+                    "sourceId": {
+                        "type": "number",
+                        "description": "Filter by source ID"
+                    },
+                    "tags": {
+                        "type": "string",
+                        "description": "Filter by tags (comma-separated)"
+                    },
+                    "created": {
+                        "type": "string",
+                        "description": (
+                            "SMART DATE FILTER: 'last 7 days', 'last 30 days', 'this week', 'this month', "
+                            "'older than 30 days', 'today', 'yesterday', '>2024-01-01', '<2024-12-31'"
+                        )
+                    },
+                    "updated": {
+                        "type": "string",
+                        "description": (
+                            "SMART DATE FILTER: Same as created. Filter by last update time."
+                        )
+                    },
+                    "createdInLast": {
+                        "type": "string",
+                        "description": "Convenience: '7 days', '30 days', '1 week' (automatically converted to created filter)"
+                    },
+                    "updatedInLast": {
+                        "type": "string",
+                        "description": "Convenience: '7 days', '30 days', '1 week' (automatically converted to updated filter)"
+                    },
+                    "includeCustomFields": {
+                        "type": "boolean",
+                        "description": "Include custom field values in response (default: true). Uses fields=allFields parameter.",
+                        "default": True
                     }
                 }
             }
@@ -329,6 +429,54 @@ def get_all_tools() -> List[Tool]:
                     }
                 },
                 "required": ["personId"]
+            }
+        ),
+        Tool(
+            name="batch_update_people",
+            description=(
+                "Update multiple contacts at once (up to 100). Much faster than individual updates. "
+                "Returns success/failure status for each update with detailed error messages."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "updates": {
+                        "type": "array",
+                        "description": "List of update objects, each containing personId and fields to update",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "personId": {
+                                    "type": "string",
+                                    "description": "Person ID to update"
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "description": "Fields to update (same as update_person)",
+                                    "properties": {
+                                        "name": {"type": "string"},
+                                        "firstName": {"type": "string"},
+                                        "lastName": {"type": "string"},
+                                        "stageId": {"type": "number"},
+                                        "assignedUserId": {"type": "string"},
+                                        "tags": {
+                                            "type": "array",
+                                            "items": {"type": "string"}
+                                        },
+                                        "customFields": {"type": "object"}
+                                    }
+                                }
+                            },
+                            "required": ["personId", "data"]
+                        }
+                    },
+                    "stopOnError": {
+                        "type": "boolean",
+                        "description": "Stop processing if an error occurs (default: false)",
+                        "default": False
+                    }
+                },
+                "required": ["updates"]
             }
         ),
         

@@ -52,3 +52,9 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+
+# Data dumps
+scripts/*.json
+
+# Test outputs
+test_output/

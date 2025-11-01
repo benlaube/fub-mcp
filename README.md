@@ -15,28 +15,33 @@ A powerful Model Context Protocol (MCP) server for seamless integration with the
 ## Key Features
 
 ### 🎯 Complete Follow Up Boss Integration
-- **32 MCP Tools** for comprehensive **Follow Up Boss** API access
+- **34 MCP Tools** for comprehensive **Follow Up Boss** API access
 - **Full CRUD Operations**: Create, Read, Update, Delete contacts and custom fields
-- **Smart Querying**: Custom queries with Python-based data processing
+- **Dynamic Discovery**: Find stages, custom fields, and sources by keyword
+- **Smart Date Filtering**: Natural language dates ("last 7 days", "this month")
+- **Batch Operations**: Update up to 100 contacts at once
 - **Duplicate Detection**: FUB-compliant duplicate checking for **Follow Up Boss** contacts
 - **Intelligent Caching**: 4.6x faster repeated queries with automatic cache invalidation
 - **Automatic Pagination**: Seamlessly handle large **Follow Up Boss** datasets (1,000+ records)
 - **Rate Limiting**: Built-in protection against API throttling
 
 ### 📊 Data Management
-- **Contacts/People**: Full management of **Follow Up Boss** contacts
-- **Custom Fields**: Create and manage custom fields on **Follow Up Boss** contacts
+- **Contacts/People**: Full management with dynamic filtering by stage, source, user, tags, dates
+- **Custom Fields**: Create, manage, and dynamically search custom fields
 - **Calls & Events**: Access call logs and activity events from **Follow Up Boss**
 - **Deals & Tasks**: Track deals and tasks within **Follow Up Boss**
 - **Pipelines & Stages**: Work with **Follow Up Boss** sales pipelines
 - **Users & Teams**: Manage **Follow Up Boss** team members
 
 ### 🔧 Advanced Capabilities
+- **Dynamic Discovery**: AI discovers what data exists and how to query it
+- **Smart Date Filtering**: "last 7 days", "this month", "older than 30 days"
+- **Batch Updates**: Update multiple contacts in one operation (10x faster)
 - **Custom Processing**: Execute Python code for data aggregation and analysis
-- **Date Filtering**: Built-in support for date range queries
+- **Enhanced Errors**: Contextual error messages with helpful suggestions
+- **Comprehensive Logging**: All operations logged to file
 - **Async Performance**: High-performance async/await architecture
-- **Safe Execution**: Sandboxed code execution environment
-- **Multi-Client Support**: Works with Claude Desktop, Cline, Continue.dev, and any MCP-compatible client
+- **Multi-Client Support**: Works with Cursor, Claude Desktop, Cline, Continue.dev, and any MCP-compatible client
 
 ## Installation
 
@@ -67,7 +72,7 @@ A powerful Model Context Protocol (MCP) server for seamless integration with the
 
 4. **Configure your Follow Up Boss API key**:
    ```bash
-   cp env.example .env
+   cp .env.example .env
    # Edit .env and add your FUB_API_KEY from Follow Up Boss
    ```
 
@@ -97,7 +102,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ### For Other MCP Clients
 
-See [MULTI_CLIENT_SETUP.md](MULTI_CLIENT_SETUP.md) for detailed setup instructions for:
+See [docs/guides/MULTI_CLIENT_SETUP.md](docs/guides/MULTI_CLIENT_SETUP.md) for detailed setup instructions for:
 - **Cline** (VS Code Extension)
 - **Continue.dev**
 - **Other MCP-compatible clients**
@@ -202,7 +207,7 @@ See [MULTI_CLIENT_SETUP.md](MULTI_CLIENT_SETUP.md) for detailed setup instructio
 ### Advanced Querying
 - `execute_custom_query` - Custom queries with Python processing
 
-See [AVAILABLE_TOOLS.md](AVAILABLE_TOOLS.md) for complete documentation and [CRUD_GUIDE.md](CRUD_GUIDE.md) for detailed CRUD examples.
+See [docs/reference/AVAILABLE_TOOLS.md](docs/reference/AVAILABLE_TOOLS.md) for complete tool documentation.
 
 ## Performance & Efficiency
 
@@ -250,13 +255,30 @@ pytest tests/test_crud.py
 
 ## Documentation
 
+### 📖 Quick Start
 - **[QUICKSTART.md](QUICKSTART.md)** - Get started in 5 minutes
-- **[MULTI_CLIENT_SETUP.md](MULTI_CLIENT_SETUP.md)** - Setup for different AI clients
-- **[CRUD_GUIDE.md](CRUD_GUIDE.md)** - Complete CRUD operations guide
-- **[DUPLICATE_CHECK_GUIDE.md](DUPLICATE_CHECK_GUIDE.md)** - Duplicate detection guide
-- **[CACHING_STRATEGY.md](CACHING_STRATEGY.md)** - Caching implementation details
-- **[AVAILABLE_TOOLS.md](AVAILABLE_TOOLS.md)** - Complete tool reference
-- **[TESTING.md](TESTING.md)** - Testing guide
+- **[docs/guides/QUICK_START_DISCOVERY.md](docs/guides/QUICK_START_DISCOVERY.md)** - Using discovery features
+
+### 📚 Guides
+- **[docs/guides/CRUD_GUIDE.md](docs/guides/CRUD_GUIDE.md)** - Complete CRUD operations guide
+- **[docs/guides/DUPLICATE_CHECK_GUIDE.md](docs/guides/DUPLICATE_CHECK_GUIDE.md)** - Duplicate detection
+- **[docs/guides/CURSOR_SETUP.md](docs/guides/CURSOR_SETUP.md)** - Cursor IDE setup
+- **[docs/guides/MULTI_CLIENT_SETUP.md](docs/guides/MULTI_CLIENT_SETUP.md)** - Setup for different AI clients
+- **[docs/guides/DEPLOYMENT_READY.md](docs/guides/DEPLOYMENT_READY.md)** - Production deployment
+- **[docs/guides/TESTING.md](docs/guides/TESTING.md)** - Testing guide
+
+### 🔧 Implementation Details
+- **[docs/implementation/DYNAMIC_DISCOVERY_IMPLEMENTATION.md](docs/implementation/DYNAMIC_DISCOVERY_IMPLEMENTATION.md)** - Discovery system
+- **[docs/implementation/SMART_DATE_FILTERING.md](docs/implementation/SMART_DATE_FILTERING.md)** - Date filtering
+- **[docs/implementation/IMPROVEMENTS_IMPLEMENTED.md](docs/implementation/IMPROVEMENTS_IMPLEMENTED.md)** - Latest updates (Nov 1, 2024)
+- **[docs/implementation/CACHING_STRATEGY.md](docs/implementation/CACHING_STRATEGY.md)** - Caching details
+
+### 📋 Reference
+- **[docs/reference/AVAILABLE_TOOLS.md](docs/reference/AVAILABLE_TOOLS.md)** - Complete tool reference
+- **[docs/reference/TOOLS_SUMMARY.md](docs/reference/TOOLS_SUMMARY.md)** - Tools summary
+
+### 📁 More Documentation
+See **[docs/](docs/)** for complete documentation index.
 
 ## Security & Best Practices
 
